@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Extra — Weekly Savings Experiment Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;1,9..144,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+  /* ── RESET & BASE ─────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #F5F0E8;
+    --card:      #FFFCF5;
+    --ink:       #1A1208;
+    --muted:     #7A7060;
+    --accent:    #E8531A;
+    --accent2:   #2D6A4F;
+    --accent3:   #F4A261;
+    --border:    rgba(26,18,8,0.10);
+    --shadow:    0 4px 32px rgba(26,18,8,0.10);
+    --radius:    20px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── NOISE TEXTURE OVERLAY ─────────────────────────── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── NAV ────────────────────────────────────────────── */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 40px;
+    background: rgba(245,240,232,0.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--ink);
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .nav-logo span {
+    background: var(--accent);
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .nav-links {
+    display: flex; gap: 32px; list-style: none;
+    font-size: 14px; font-weight: 400; color: var(--muted);
+  }
+
+  .nav-links a { text-decoration: none; color: inherit; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--ink); }
+
+  /* ── HERO ───────────────────────────────────────────── */
+  .hero {
+    position: relative;
+    padding: 100px 40px 80px;
+    max-width: 1100px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .hero-eyebrow {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(232,83,26,0.08);
+    border: 1px solid rgba(232,83,26,0.2);
+    padding: 6px 14px;
+    border-radius: 100px;
+    margin-bottom: 28px;
+    opacity: 0;
+    animation: fadeUp 0.6s 0.1s forwards;
+  }
+
+  .hero h1 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(42px, 6vw, 80px);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin-bottom: 24px;
+    opacity: 0;
+    animation: fadeUp 0.7s 0.2s forwards;
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .hero-sub {
+    font-size: 18px;
+    line-height: 1.65;
+    color: var(--muted);
+    max-width: 620px;
+    margin: 0 auto 48px;
+    font-weight: 300;
+    opacity: 0;
+    animation: fadeUp 0.7s 0.3s forwards;
+  }
+
+  .hero-cta {
+    display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;
+    opacity: 0;
+    animation: fadeUp 0.7s 0.4s forwards;
+  }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 14px 28px;
+    border-radius: 100px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.25s;
+    border: none;
+    text-decoration: none;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 2px 20px rgba(232,83,26,0.35);
+  }
+  .btn-primary:hover {
+    background: #c94410;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 28px rgba(232,83,26,0.4);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--ink);
+    border: 1.5px solid var(--border);
+  }
+  .btn-ghost:hover {
+    background: var(--card);
+    border-color: rgba(26,18,8,0.2);
+  }
+
+  /* ── SECTION LAYOUT ─────────────────────────────────── */
+  .section {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 80px 40px;
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+
+  .section-title {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(28px, 3.5vw, 46px);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin-bottom: 48px;
+  }
+
+  /* ── EXPERIMENT BRIEF ───────────────────────────────── */
+  .brief-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 60px;
+  }
+
+  @media (max-width: 768px) {
+    .brief-grid { grid-template-columns: 1fr; }
+    nav { padding: 14px 20px; }
+    .nav-links { display: none; }
+    .hero { padding: 60px 20px 40px; }
+    .section { padding: 60px 20px; }
+  }
+
+  .brief-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    box-shadow: var(--shadow);
+    transition: transform 0.25s;
+  }
+  .brief-card:hover { transform: translateY(-3px); }
+
+  .brief-card-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    margin-bottom: 16px;
+  }
+
+  .brief-card h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+
+  .brief-card p {
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: var(--muted);
+  }
+
+  /* ── DIVIDER ─────────────────────────────────────────── */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  /* ── PHONE MOCKUP ───────────────────────────────────── */
+  .demo-section {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 80px 40px;
+    display: grid;
+    grid-template-columns: 1fr 1.1fr;
+    gap: 80px;
+    align-items: center;
+  }
+
+  @media (max-width: 900px) {
+    .demo-section { grid-template-columns: 1fr; gap: 40px; }
+  }
+
+  .demo-copy h2 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(26px, 3vw, 40px);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin-bottom: 20px;
+  }
+
+  .demo-copy p {
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .phone-wrap {
+    display: flex;
+    justify-content: center;
+    position: relative;
+  }
+
+  .phone {
+    width: 300px;
+    background: #1A1208;
+    border-radius: 44px;
+    padding: 16px;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.06),
+      0 30px 80px rgba(26,18,8,0.35),
+      0 10px 30px rgba(26,18,8,0.2);
+    position: relative;
+  }
+
+  .phone-notch {
+    width: 100px; height: 28px;
+    background: #1A1208;
+    border-radius: 0 0 20px 20px;
+    margin: 0 auto 16px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .phone-screen {
+    background: #F5F0E8;
+    border-radius: 30px;
+    overflow: hidden;
+    min-height: 560px;
+  }
+
+  /* notification panel */
+  .notif-header {
+    background: #1A1208;
+    padding: 20px 20px 16px;
+    color: #F5F0E8;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .notif-header .app-icon {
+    width: 36px; height: 36px;
+    background: var(--accent);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Fraunces', serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  .notif-header-text {
+    flex: 1;
+  }
+
+  .notif-header-text .app-name {
+    font-size: 12px;
+    font-weight: 500;
+    opacity: 0.6;
+    margin-bottom: 2px;
+  }
+
+  .notif-header-text .notif-title {
+    font-family: 'Fraunces', serif;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .notif-time {
+    font-size: 11px;
+    opacity: 0.4;
+    align-self: flex-start;
+    padding-top: 2px;
+  }
+
+  /* big number reveal */
+  .time-reveal {
+    padding: 28px 20px 20px;
+    text-align: center;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .time-reveal .label {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .time-number {
+    font-family: 'Fraunces', serif;
+    font-size: 68px;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 4px;
+    transition: all 0.1s;
+  }
+
+  .time-unit {
+    font-size: 14px;
+    color: var(--muted);
+    font-weight: 400;
+    margin-bottom: 16px;
+  }
+
+  .time-tagline {
+    font-family: 'Fraunces', serif;
+    font-size: 15px;
+    font-style: italic;
+    color: var(--ink);
+    line-height: 1.4;
+    max-width: 200px;
+    margin: 0 auto;
+  }
+
+  /* breakdown list */
+  .breakdown {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .breakdown-title {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .breakdown-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 14px;
+    animation: slideIn 0.4s both;
+  }
+
+  .breakdown-item:nth-child(2) { animation-delay: 0.05s; }
+  .breakdown-item:nth-child(3) { animation-delay: 0.1s; }
+  .breakdown-item:nth-child(4) { animation-delay: 0.15s; }
+
+  .bi-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+
+  .bi-text { flex: 1; }
+  .bi-text .bi-label { font-size: 12px; font-weight: 500; color: var(--ink); }
+  .bi-text .bi-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .bi-mins {
+    font-family: 'Fraunces', serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--accent2);
+  }
+
+  /* CTA strip */
+  .notif-cta {
+    margin: 16px 20px 20px;
+    background: var(--accent);
+    border-radius: 14px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .notif-cta:hover { background: #c94410; }
+
+  .notif-cta-text {
+    font-size: 13px;
+    font-weight: 500;
+    color: #fff;
+  }
+  .notif-cta-text .cta-sub {
+    font-size: 11px;
+    opacity: 0.8;
+    margin-top: 2px;
+    font-weight: 400;
+  }
+  .notif-cta-arrow {
+    color: #fff;
+    font-size: 18px;
+    opacity: 0.8;
+  }
+
+  /* ── VARIANT TABS ───────────────────────────────────── */
+  .variants-section {
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 80px 40px;
+  }
+
+  .variants-inner { max-width: 1100px; margin: 0 auto; }
+
+  .tab-row {
+    display: flex; gap: 8px;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+  }
+
+  .tab {
+    padding: 10px 20px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .tab.active {
+    background: var(--ink);
+    color: #F5F0E8;
+    border-color: var(--ink);
+  }
+  .tab:hover:not(.active) {
+    border-color: rgba(26,18,8,0.3);
+    color: var(--ink);
+  }
+
+  .variant-content { display: none; }
+  .variant-content.active { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
+
+  @media (max-width: 768px) {
+    .variant-content.active { grid-template-columns: 1fr; }
+    .variants-section { padding: 60px 20px; }
+    .demo-section { padding: 60px 20px; }
+  }
+
+  .variant-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+  }
+
+  .variant-card h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--ink);
+  }
+
+  .variant-card .variant-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 100px;
+    margin-bottom: 16px;
+  }
+
+  .tag-control { background: rgba(45,106,79,0.1); color: var(--accent2); }
+  .tag-variant { background: rgba(232,83,26,0.1); color: var(--accent); }
+  .tag-variant-b { background: rgba(244,162,97,0.15); color: #c07820; }
+
+  .variant-notif {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--ink);
+    margin-bottom: 16px;
+    box-shadow: 0 2px 12px rgba(26,18,8,0.06);
+  }
+
+  .variant-notif strong { font-weight: 600; }
+
+  .variant-meta {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  .metric-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+
+  .metric-pill {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .metric-pill strong {
+    display: block;
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 1px;
+  }
+
+  /* ── EXPERIMENT SPEC ────────────────────────────────── */
+  .spec-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  @media (max-width: 768px) {
+    .spec-grid { grid-template-columns: 1fr; }
+  }
+
+  .spec-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    box-shadow: var(--shadow);
+  }
+
+  .spec-card h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--ink);
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .spec-card ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .spec-card li {
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--muted);
+    padding-left: 18px;
+    position: relative;
+  }
+
+  .spec-card li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-size: 12px;
+  }
+
+  .spec-card li strong { color: var(--ink); font-weight: 500; }
+
+  /* ── DECISION TREE ──────────────────────────────────── */
+  .tree-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 36px;
+    margin-top: 40px;
+    box-shadow: var(--shadow);
+    overflow-x: auto;
+  }
+
+  .tree-title {
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 28px;
+    color: var(--ink);
+  }
+
+  .tree {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    min-width: 420px;
+  }
+
+  .tree-node {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px 0;
+    border-left: 2px solid var(--border);
+    margin-left: 16px;
+    padding-left: 24px;
+    position: relative;
+  }
+
+  .tree-node::before {
+    content: '';
+    position: absolute;
+    left: -1px;
+    top: 28px;
+    width: 16px;
+    height: 2px;
+    background: var(--border);
+  }
+
+  .tree-node:first-child { border-left-color: transparent; margin-left: 0; padding-left: 0; }
+  .tree-node:first-child::before { display: none; }
+
+  .tree-dot {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: var(--card);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 14px;
+  }
+
+  .tree-dot.root { background: var(--ink); border-color: var(--ink); color: #F5F0E8; }
+  .tree-dot.pass { background: var(--accent2); border-color: var(--accent2); color: #fff; }
+  .tree-dot.fail { background: #C0392B; border-color: #C0392B; color: #fff; }
+  .tree-dot.neutral { background: var(--accent3); border-color: var(--accent3); color: #fff; }
+
+  .tree-text { flex: 1; padding-top: 4px; }
+  .tree-text .tt { font-size: 14px; font-weight: 500; color: var(--ink); margin-bottom: 4px; }
+  .tree-text .ts { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+  /* ── FOOTER ─────────────────────────────────────────── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .footer-brand {
+    font-family: 'Fraunces', serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--muted);
+  }
+
+  .footer-note {
+    font-size: 12px;
+    color: var(--muted);
+    max-width: 500px;
+    line-height: 1.6;
+  }
+
+  /* ── ANIMATIONS ─────────────────────────────────────── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-12px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  @keyframes countUp {
+    from { opacity: 0.3; }
+    to   { opacity: 1; }
+  }
+
+  .counter-animate {
+    animation: countUp 0.08s ease-in-out;
+  }
+
+  /* number ticker visual flair */
+  .ticker-ring {
+    position: absolute;
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    border: 1.5px dashed rgba(232,83,26,0.2);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    animation: spin 30s linear infinite;
+    pointer-events: none;
+  }
+
+  @keyframes spin {
+    to { transform: translate(-50%, -50%) rotate(360deg); }
+  }
+
+  /* inline highlight */
+  .hl { background: rgba(232,83,26,0.12); padding: 1px 5px; border-radius: 4px; color: var(--accent); font-weight: 500; }
+
+  /* pill badge */
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 500;
+    padding: 5px 12px;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    background: var(--card);
+    margin: 4px 4px 4px 0;
+  }
+
+  .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent2); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    extra <span>experiment</span>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#demo">Demo</a></li>
+    <li><a href="#variants">A/B Variants</a></li>
+    <li><a href="#spec">Experiment Spec</a></li>
+    <li><a href="#decision">Decision Framework</a></li>
+  </ul>
+  <a href="https://extra.email" target="_blank" class="btn btn-ghost" style="font-size:13px; padding: 10px 18px;">extra.email ↗</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow">Growth Experiment · Week 1 Proposal</div>
+  <h1>Give users their<br><em>time back</em> — visibly.</h1>
+  <p class="hero-sub">
+    A weekly personalized notification showing each Extra user exactly how many minutes the app saved them — making the core value proposition tangible, measurable, and habit-forming.
+  </p>
+  <div class="hero-cta">
+    <a href="#demo" class="btn btn-primary">See the prototype ↓</a>
+    <a href="#spec" class="btn btn-ghost">Read the experiment spec</a>
+  </div>
+</section>
+
+<!-- EXPERIMENT BRIEF CARDS -->
+<section class="section" style="padding-top: 0;">
+  <div class="section-label">The Hypothesis</div>
+  <h2 class="section-title">Why this experiment?</h2>
+  <div class="brief-grid">
+    <div class="brief-card">
+      <div class="brief-card-icon" style="background: rgba(232,83,26,0.1);">🎯</div>
+      <h3>The problem</h3>
+      <p>Extra's core promise is giving you back hours every week — but users never <em>see</em> it. The value is invisible. If you don't feel the benefit, you don't build the habit.</p>
+    </div>
+    <div class="brief-card">
+      <div class="brief-card-icon" style="background: rgba(45,106,79,0.1);">💡</div>
+      <h3>The experiment</h3>
+      <p>Send a personalized weekly push notification on Sunday evenings showing <em>exactly</em> how many minutes Extra saved each user — broken down by category, not as a generic re-engagement nudge.</p>
+    </div>
+    <div class="brief-card">
+      <div class="brief-card-icon" style="background: rgba(244,162,97,0.15);">📊</div>
+      <h3>The hypothesis</h3>
+      <p>Users who receive a concrete, personalized time-saved number will have <span class="hl">meaningfully higher 7-day retention</span> than those who receive no notification or a generic re-engagement message.</p>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: -20px;">
+    <span class="badge"><span class="badge-dot"></span> Primary metric: 7-day retention</span>
+    <span class="badge"><span class="badge-dot" style="background: var(--accent);"></span> Secondary: DAU/WAU ratio</span>
+    <span class="badge"><span class="badge-dot" style="background: var(--accent3);"></span> Duration: 14 days</span>
+    <span class="badge"><span class="badge-dot" style="background: #888;"></span> Split: 50/50 control vs variant</span>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- PHONE DEMO -->
+<section class="demo-section" id="demo">
+  <div class="demo-copy">
+    <div class="section-label">Notification prototype</div>
+    <h2>What the user actually sees</h2>
+    <p>Sunday evening, 7pm. Instead of a generic "You have unread emails!" push — Extra sends a personalized weekly digest that makes the value concrete.</p>
+    <p>The big number anchors attention. The breakdown makes it believable. The CTA converts the feeling into a next action.</p>
+    <p style="margin-top: 24px;">
+      <strong style="color: var(--ink);">Try the counter →</strong><br>
+      <span style="color: var(--muted); font-size:14px;">Click the minutes to see how the number feels at different values.</span>
+    </p>
+    <div style="display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap;">
+      <button class="btn btn-ghost" style="font-size:13px;" onclick="setTime(23)">Light week</button>
+      <button class="btn btn-ghost" style="font-size:13px;" onclick="setTime(47)">Average week</button>
+      <button class="btn btn-primary" style="font-size:13px;" onclick="setTime(84)">Busy week</button>
+    </div>
+  </div>
+
+  <div class="phone-wrap" id="demo">
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+
+        <!-- Notification Header -->
+        <div class="notif-header">
+          <div class="app-icon">E</div>
+          <div class="notif-header-text">
+            <div class="app-name">extra · now</div>
+            <div class="notif-title">Your week, reclaimed ✦</div>
+          </div>
+          <div class="notif-time">7:02 PM</div>
+        </div>
+
+        <!-- Time Reveal -->
+        <div class="time-reveal" style="position: relative; overflow: hidden;">
+          <div class="ticker-ring"></div>
+          <div class="label">Extra saved you this week</div>
+          <div class="time-number" id="timeNumber">47</div>
+          <div class="time-unit">minutes</div>
+          <div class="time-tagline" id="timeTagline">"That's a full lunch break<br>back in your day."</div>
+        </div>
+
+        <!-- Breakdown -->
+        <div class="breakdown">
+          <div class="breakdown-title">Where your time went ↗</div>
+
+          <div class="breakdown-item">
+            <div class="bi-icon" style="background: rgba(232,83,26,0.1);">📧</div>
+            <div class="bi-text">
+              <div class="bi-label">Threads summarized</div>
+              <div class="bi-sub" id="threadCount">14 threads · avg 2 min each</div>
+            </div>
+            <div class="bi-mins" id="threadMins">28m</div>
+          </div>
+
+          <div class="breakdown-item">
+            <div class="bi-icon" style="background: rgba(45,106,79,0.1);">🚫</div>
+            <div class="bi-text">
+              <div class="bi-label">Noise filtered</div>
+              <div class="bi-sub" id="noiseCount">62 emails hidden</div>
+            </div>
+            <div class="bi-mins" id="noiseMins">12m</div>
+          </div>
+
+          <div class="breakdown-item">
+            <div class="bi-icon" style="background: rgba(244,162,97,0.15);">⚡</div>
+            <div class="bi-text">
+              <div class="bi-label">Smart replies drafted</div>
+              <div class="bi-sub" id="replyCount">5 replies auto-drafted</div>
+            </div>
+            <div class="bi-mins" id="replyMins">7m</div>
+          </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="notif-cta" onclick="alert('→ Opens Extra app to the weekly summary screen')">
+          <div class="notif-cta-text">
+            See full week recap
+            <div class="cta-sub">What Extra caught that mattered</div>
+          </div>
+          <div class="notif-cta-arrow">→</div>
+        </div>
+
+      </div><!-- /phone-screen -->
+    </div><!-- /phone -->
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- A/B VARIANTS -->
+<section class="variants-section" id="variants">
+  <div class="variants-inner">
+    <div class="section-label">A/B Test Design</div>
+    <h2 class="section-title">Three variants, one winner.</h2>
+
+    <div class="tab-row">
+      <button class="tab active" onclick="showVariant('control', this)">Control</button>
+      <button class="tab" onclick="showVariant('variant-a', this)">Variant A — Time Saved</button>
+      <button class="tab" onclick="showVariant('variant-b', this)">Variant B — Streak</button>
+    </div>
+
+    <!-- CONTROL -->
+    <div class="variant-content active" id="control">
+      <div class="variant-card">
+        <h3>Control group</h3>
+        <span class="variant-tag tag-control">No notification</span>
+        <div class="variant-notif">
+          <em style="color: var(--muted);">(No weekly notification sent)</em><br><br>
+          Users receive only in-app activity — no push notification about weekly usage or savings.
+        </div>
+        <div class="variant-meta">
+          <strong>Purpose:</strong> Baseline to measure organic 7-day retention and DAU/WAU without any weekly nudge. If variants don't beat this, the experiment fails.
+        </div>
+        <div class="metric-row">
+          <div class="metric-pill"><strong>~</strong>Baseline retention</div>
+          <div class="metric-pill"><strong>50%</strong>of users</div>
+        </div>
+      </div>
+      <div class="variant-card">
+        <h3>What we're measuring</h3>
+        <p style="font-size:13.5px; color: var(--muted); line-height: 1.75; margin-bottom: 16px;">Against this baseline, any uplift in Variant A or B is attributable to the notification itself — not organic app behavior.</p>
+        <ul style="list-style: none; display: flex; flex-direction: column; gap: 10px;">
+          <li style="font-size: 13px; color: var(--muted); padding-left: 18px; position: relative;">
+            <span style="position: absolute; left: 0; color: var(--accent);">→</span>
+            <strong style="color: var(--ink);">7-day retention rate</strong> — did they open the app again within a week?
+          </li>
+          <li style="font-size: 13px; color: var(--muted); padding-left: 18px; position: relative;">
+            <span style="position: absolute; left: 0; color: var(--accent);">→</span>
+            <strong style="color: var(--ink);">DAU/WAU ratio</strong> — are they coming back more frequently?
+          </li>
+          <li style="font-size: 13px; color: var(--muted); padding-left: 18px; position: relative;">
+            <span style="position: absolute; left: 0; color: var(--accent);">→</span>
+            <strong style="color: var(--ink);">Notification CTR</strong> — did they tap through to the app?
+          </li>
+          <li style="font-size: 13px; color: var(--muted); padding-left: 18px; position: relative;">
+            <span style="position: absolute; left: 0; color: var(--accent);">→</span>
+            <strong style="color: var(--ink);">Feature depth</strong> — did they engage with more features after seeing savings?
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- VARIANT A -->
+    <div class="variant-content" id="variant-a">
+      <div class="variant-card">
+        <h3>Variant A — Time Saved</h3>
+        <span class="variant-tag tag-variant">Personalized value</span>
+        <div class="variant-notif">
+          <strong>⏱ Extra saved you 47 minutes this week.</strong><br><br>
+          That's 14 threads summarized, 62 emails filtered, and 5 replies drafted while you were doing other things.<br><br>
+          <span style="color: var(--accent);">See your full week recap →</span>
+        </div>
+        <div class="variant-meta">
+          <strong>Hypothesis:</strong> Showing a concrete, personalized number creates a "wow" moment that makes the product feel indispensable. The number is different for every user — making it feel personal, not templated.
+        </div>
+        <div class="metric-row">
+          <div class="metric-pill"><strong>+?%</strong>vs control</div>
+          <div class="metric-pill"><strong>50%</strong>of users</div>
+        </div>
+      </div>
+      <div class="variant-card">
+        <h3>Why this variant should win</h3>
+        <p style="font-size:13.5px; color: var(--muted); line-height: 1.75; margin-bottom: 16px;">Time is the most emotionally resonant resource. Showing someone they got 47 minutes back triggers a stronger response than "you have new summaries." It makes the value proposition <em>felt</em>, not just understood.</p>
+        <p style="font-size:13.5px; color: var(--muted); line-height: 1.75;">The breakdown (threads, noise, replies) adds credibility — it doesn't feel like a made-up number. Each line is auditable.</p>
+      </div>
+    </div>
+
+    <!-- VARIANT B -->
+    <div class="variant-content" id="variant-b">
+      <div class="variant-card">
+        <h3>Variant B — Streak</h3>
+        <span class="variant-tag tag-variant-b">Habit formation</span>
+        <div class="variant-notif">
+          <strong>🔥 3-week streak. Extra's been working for you.</strong><br><br>
+          This week: 47 minutes saved. Last week: 39 minutes. You're getting more out of Extra every week.<br><br>
+          <span style="color: var(--accent);">Keep the streak going →</span>
+        </div>
+        <div class="variant-meta">
+          <strong>Hypothesis:</strong> Adding a streak mechanic (like Duolingo) activates loss aversion — users don't want to break the streak. Tests whether habit-formation framing outperforms pure value framing from Variant A.
+        </div>
+        <div class="metric-row">
+          <div class="metric-pill"><strong>+?%</strong>vs control</div>
+          <div class="metric-pill"><strong>A/B</strong>vs Variant A</div>
+        </div>
+      </div>
+      <div class="variant-card">
+        <h3>Streak vs. value: the real test</h3>
+        <p style="font-size:13.5px; color: var(--muted); line-height: 1.75; margin-bottom: 16px;">Variant B isn't just testing a different message — it's testing a different psychological lever. Variant A says "look what Extra did for you." Variant B says "look what you and Extra have built together."</p>
+        <p style="font-size:13.5px; color: var(--muted); line-height: 1.75;">If B beats A, Extra should invest in a streak/habit system. If A beats B, double down on personalized value reporting. Either answer is useful.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- EXPERIMENT SPEC -->
+<section class="section" id="spec">
+  <div class="section-label">Full Experiment Spec</div>
+  <h2 class="section-title">How to run this in 5 days.</h2>
+
+  <div class="spec-grid">
+    <div class="spec-card">
+      <h3>📐 Setup (Days 1–2)</h3>
+      <ul>
+        <li><strong>Define the instrumentation:</strong> confirm that thread summarizations, filtered emails, and drafted replies are already logged per user per week</li>
+        <li><strong>Build the computation layer:</strong> simple script — sum per-user weekly actions × estimated time saved per action (configurable constants)</li>
+        <li><strong>Create 3 notification templates</strong> in your push notification tool (e.g. OneSignal, Braze, Firebase), parameterized by user stats</li>
+        <li><strong>Set up 50/50 random split</strong> at the user level — lock assignment at experiment start, don't re-randomize</li>
+      </ul>
+    </div>
+
+    <div class="spec-card">
+      <h3>🧪 Run (Days 3–16)</h3>
+      <ul>
+        <li><strong>Send cadence:</strong> Sunday evening, 7–8pm local time — highest open rates for consumer apps</li>
+        <li><strong>Run duration:</strong> 2 full weekly cycles (14 days) — enough for 2 notification touches per user</li>
+        <li><strong>Track daily:</strong> retention rate by cohort, CTR on notification, feature engagement post-open</li>
+        <li><strong>Do not adjust</strong> notification copy mid-run — lock variants before launch</li>
+        <li><strong>Monitor opt-out rate</strong> — if Variant X drives significantly more notification opt-outs, that's a negative signal even if retention looks good</li>
+      </ul>
+    </div>
+
+    <div class="spec-card">
+      <h3>📊 Measure (Day 17)</h3>
+      <ul>
+        <li><strong>Primary:</strong> 7-day retention rate per variant — did users open the app within 7 days of receiving the notification?</li>
+        <li><strong>Secondary:</strong> DAU/WAU ratio — are notified users building a stronger daily habit?</li>
+        <li><strong>Secondary:</strong> CTR on the notification itself — are users tapping through?</li>
+        <li><strong>Guardrail:</strong> notification opt-out rate must not be materially higher than control's baseline churn</li>
+        <li><strong>Significance threshold:</strong> p &lt; 0.05 with minimum detectable effect of +5pp on retention</li>
+      </ul>
+    </div>
+
+    <div class="spec-card">
+      <h3>⚙️ Technical notes</h3>
+      <ul>
+        <li><strong>Time saved calculation:</strong> configurable constants (e.g. 2 min/thread, 0.2 min/filtered email, 1.5 min/draft) — tune based on user research, not assumptions</li>
+        <li><strong>Edge case — new users:</strong> users with &lt; 5 actions in the week get a different message: "Extra is just getting started for you — here's what it caught this week"</li>
+        <li><strong>Edge case — power users:</strong> cap the displayed number at 120min — anything above strains credibility</li>
+        <li><strong>Personalization:</strong> use first name in notification if available — small uplift on open rates</li>
+        <li><strong>Future iteration:</strong> if A or B wins, test sending on Thursday instead of Sunday to see if mid-week reinforcement changes habit formation</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Decision Tree -->
+  <div class="tree-wrap" id="decision">
+    <div class="tree-title">Decision framework — what to do with results</div>
+    <div class="tree">
+
+      <div class="tree-node">
+        <div class="tree-dot root">▶</div>
+        <div class="tree-text">
+          <div class="tt">Day 17: Results are in</div>
+          <div class="ts">Compare 7-day retention across Control, Variant A, Variant B</div>
+        </div>
+      </div>
+
+      <div class="tree-node">
+        <div class="tree-dot pass">✓</div>
+        <div class="tree-text">
+          <div class="tt">Variant A or B beats control by ≥ 5pp (p &lt; 0.05)</div>
+          <div class="ts">Experiment succeeds → roll out winning variant to 100% of users → build permanent "Weekly Recap" feature into product roadmap</div>
+        </div>
+      </div>
+
+      <div class="tree-node">
+        <div class="tree-dot pass">✓</div>
+        <div class="tree-text">
+          <div class="tt">Both A and B beat control, but A &gt; B</div>
+          <div class="ts">Value framing wins over habit framing → invest in personalized time-saved reporting → de-prioritize streak mechanic</div>
+        </div>
+      </div>
+
+      <div class="tree-node">
+        <div class="tree-dot neutral">~</div>
+        <div class="tree-text">
+          <div class="tt">Both A and B beat control, B &gt; A</div>
+          <div class="ts">Habit formation wins → build a streak system → test weekly cadence vs. daily check-in notification in follow-up experiment</div>
+        </div>
+      </div>
+
+      <div class="tree-node">
+        <div class="tree-dot neutral">~</div>
+        <div class="tree-text">
+          <div class="tt">Small lift (&lt; 5pp) — inconclusive</div>
+          <div class="ts">Re-run with larger user sample or longer duration → test notification timing (Thursday vs Sunday) → consider whether the message copy needs a stronger hook</div>
+        </div>
+      </div>
+
+      <div class="tree-node">
+        <div class="tree-dot fail">✕</div>
+        <div class="tree-text">
+          <div class="tt">No lift, or variant drives higher opt-out rate</div>
+          <div class="ts">Weekly push is not the right channel → test in-app card instead (shown on Monday morning open) → the insight is still valid, the channel may not be</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-brand">extra × growth experiment</div>
+  <div class="footer-note">
+    Prototype designed by Jahanvi Joshi as a week-one growth experiment proposal for BuildForever's Growth Intern role. All data shown is illustrative. Built to be deployed on GitHub Pages for team review.
+  </div>
+</footer>
+
+<script>
+  // ── VARIANT TABS ──────────────────────────────────────
+  function showVariant(id, btn) {
+    document.querySelectorAll('.variant-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  // ── COUNTER ───────────────────────────────────────────
+  const configs = {
+    23: {
+      tagline: '"That\'s a coffee break\nyou actually got back."',
+      threads: '8 threads · avg 2 min each',
+      threadMins: '16m',
+      noise: '31 emails hidden',
+      noiseMins: '5m',
+      replies: '2 replies auto-drafted',
+      replyMins: '2m'
+    },
+    47: {
+      tagline: '"That\'s a full lunch break\nback in your day."',
+      threads: '14 threads · avg 2 min each',
+      threadMins: '28m',
+      noise: '62 emails hidden',
+      noiseMins: '12m',
+      replies: '5 replies auto-drafted',
+      replyMins: '7m'
+    },
+    84: {
+      tagline: '"That\'s an entire morning\nExtra handled for you."',
+      threads: '26 threads · avg 2 min each',
+      threadMins: '52m',
+      noise: '118 emails hidden',
+      noiseMins: '24m',
+      replies: '9 replies auto-drafted',
+      replyMins: '8m'
+    }
+  };
+
+  function setTime(mins) {
+    const cfg = configs[mins];
+    const el = document.getElementById('timeNumber');
+
+    // Animate count up
+    let start = parseInt(el.textContent);
+    const end = mins;
+    const duration = 600;
+    const startTime = performance.now();
+
+    function tick(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      el.textContent = Math.round(start + (end - start) * eased);
+      if (progress < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+
+    document.getElementById('timeTagline').innerHTML = cfg.tagline.replace('\n', '<br>');
+    document.getElementById('threadCount').textContent = cfg.threads;
+    document.getElementById('threadMins').textContent = cfg.threadMins;
+    document.getElementById('noiseCount').textContent = cfg.noise;
+    document.getElementById('noiseMins').textContent = cfg.noiseMins;
+    document.getElementById('replyCount').textContent = cfg.replies;
+    document.getElementById('replyMins').textContent = cfg.replyMins;
+  }
+
+  // ── INTERSECTION OBSERVER for scroll animations ───────
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.brief-card, .spec-card, .variant-card, .tree-node').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(20px)';
+    el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+    observer.observe(el);
+  });
+</script>
+</body>
+</html>
